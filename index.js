@@ -48,14 +48,6 @@ async function run() {
     const ClassesCollection = client.db('survivalDB').collection('Classes')
     const UserCollection = client.db('survivalDB').collection('users')
 
-    // user api 
-    app.post('/users', async (req, res) => {
-      const user = req.body;
-      const result = await UserCollection.insertOne(user);
-      console.log(result);
-      res.send(result);
-    })
-
     //jwt token
     app.post('/jwt', (req, res) => {
       const email = req.body
@@ -66,6 +58,29 @@ async function run() {
       console.log(token);
       res.send(token)
     })
+
+
+    // user api 
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const result = await UserCollection.insertOne(user);
+      console.log(result);
+      res.send(result);
+    })
+
+    // classes apis 
+    app.post('/classes', async (req, res) => {
+      const user = req.body;
+      const result = await ClassesCollection.insertOne(user);
+      console.log(result);
+      res.send(result);
+    })
+
+
+
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
