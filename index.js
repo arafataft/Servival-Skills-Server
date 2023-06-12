@@ -91,7 +91,16 @@ async function run() {
 
 
 // selected apis 
-
+app.get('/select', verifyJWT, async (req, res) => {
+  try {
+    const userEmail = req.decoded.email; // Extract the user email from the decoded token
+    const selectedClasses = await SelectCollection.find({ userEmail }).toArray();
+    res.status(200).json(selectedClasses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'Failed to fetch selected classes' });
+  }
+});
 
 
 
