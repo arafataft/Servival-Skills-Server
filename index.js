@@ -47,6 +47,7 @@ async function run() {
 
     const ClassesCollection = client.db('survivalDB').collection('Classes')
     const UserCollection = client.db('survivalDB').collection('users')
+    const SelectCollection = client.db('survivalDB').collection('select')
 
     //jwt token
     app.post('/jwt', (req, res) => {
@@ -69,6 +70,18 @@ async function run() {
     })
 
     // classes apis 
+
+    app.get('/classes', async (req, res) => {
+      try {
+        const classes = await ClassesCollection.find().toArray();
+        res.status(200).json(classes);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to fetch class data' });
+      }
+    });
+
+
     app.post('/classes', async (req, res) => {
       const user = req.body;
       const result = await ClassesCollection.insertOne(user);
@@ -77,6 +90,22 @@ async function run() {
     })
 
 
+// selected apis 
+
+
+
+
+app.post('/select', async (req, res) => {
+  try {
+    const selectData = req.body;
+    const result = await SelectCollection.insertOne(selectData);
+    console.log(result);
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'Failed to add data to select collection' });
+  }
+});
 
 
 
