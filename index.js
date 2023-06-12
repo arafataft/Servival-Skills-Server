@@ -108,6 +108,14 @@ app.get('/select',verifyJWT, async (req, res) => {
 app.post('/select', async (req, res) => {
   try {
     const selectData = req.body;
+    const { classId, userEmail } = selectData;
+
+    // Check if the user has already selected the class
+    const existingSelection = await SelectCollection.findOne({ classId, userEmail });
+    if (existingSelection) {
+      return res.status(400).json({ error: true, message: ' already selected ' });
+    }
+
     const result = await SelectCollection.insertOne(selectData);
     console.log(result);
     res.send(result);
@@ -116,6 +124,7 @@ app.post('/select', async (req, res) => {
     res.status(500).json({ error: true, message: 'Failed to add data to select collection' });
   }
 });
+
 
 app.delete('/select/:classId', async (req, res) => {
   try {
