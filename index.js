@@ -28,7 +28,7 @@ const verifyJWT = (req, res, next) => {
   })
 }
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fwntuaw.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -51,14 +51,15 @@ async function run() {
 
     //jwt token
     app.post('/jwt', (req, res) => {
-      const email = req.body
-      console.log(email)
-      const token = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
+      const { email } = req.body; // Extract the email from the request body
+      console.log(email);
+      const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '1h',
-      })
+      });
       console.log(token);
-      res.send(token)
-    })
+      res.send(token);
+    });
+    
 
 
     // user api 
@@ -91,7 +92,7 @@ async function run() {
 
 
 // selected apis 
-app.get('/select', verifyJWT, async (req, res) => {
+app.get('/select',verifyJWT, async (req, res) => {
   try {
     const userEmail = req.decoded.email; // Extract the user email from the decoded token
     const selectedClasses = await SelectCollection.find({ userEmail }).toArray();
@@ -113,6 +114,20 @@ app.post('/select', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: true, message: 'Failed to add data to select collection' });
+  }
+});
+
+app.delete('/select/:classId', async (req, res) => {
+  try {
+    const classId = req.params.classId;
+
+    // Delete the selected class by its ObjectId
+    await SelectCollection.deleteOne({ _id: new ObjectId(classId) });
+
+    res.status(200).json({ message: 'Class deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete the class' });
   }
 });
 
