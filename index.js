@@ -85,6 +85,107 @@ async function run() {
         res.status(500).json({ error: true, message: 'Failed to fetch class data' });
       }
     });
+    app.get('/approveclasses', async (req, res) => {
+      try {
+        const classes = await ClassesCollection.find({ status:'approved' }).toArray();
+        res.status(200).json(classes);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to fetch class data' });
+      }
+    });
+
+
+// Update a class
+
+app.put('/classes/:id', async (req, res) => {
+  try {
+    const classId = req.params.id;
+    const { className, availableSeats, price } = req.body;
+
+    // Update the class in the database
+    const result = await ClassesCollection.updateOne(
+      { _id: new ObjectId(classId) }, // Match the document based on the class ID
+      {
+        $set: {
+          className: className,
+          availableSeats: availableSeats,
+          price: price
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    res.json({ message: 'Class updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+app.put('/manageclasses/:classId', async (req, res) => {
+  const classId = req.params.classId;
+  const { status } = req.body;
+
+  try {
+    const query = { _id:new ObjectId(classId) };
+    const update = { $set: { status } };
+
+    const classToUpdate = await ClassesCollection.findOneAndUpdate(query, update);
+
+    if (classToUpdate) {
+      res.status(200).json({ message: 'Class status updated successfully' });
+    } else {
+      res.status(404).json({ error: 'Class not found' });
+    }
+  } catch (error) {
+    console.log('Error updating class status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.put('/classes/:classId/feedback', async (req, res) => {
+  const classId = req.params.classId;
+  const { feedback } = req.body;
+
+  try {
+    const query = { _id:new ObjectId(classId) };
+    const update = { $set: { feedback } };
+
+    const classToUpdate = await ClassesCollection.findOneAndUpdate(query, update);
+
+    if (classToUpdate) {
+      res.status(200).json({ message: 'Feedback updated successfully' });
+    } else {
+      res.status(404).json({ error: 'Class not found' });
+    }
+  } catch (error) {
+    console.log('Error updating feedback:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+    app.get('/instructor-classes', verifyJWT, async (req, res) => {
+      try {
+        const userEmail = req.decoded.email; // Extract the user email from the decoded token
+    
+        // Fetch classes where the instructor email matches the user email
+        const classes = await ClassesCollection.find({ instructorEmail: userEmail }).toArray();
+    
+        res.status(200).json(classes);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to fetch instructor classes' });
+      }
+    });
+    
 
 
     app.post('/classes', async (req, res) => {
