@@ -56,11 +56,11 @@ async function run() {
     //jwt token
     app.post('/jwt', (req, res) => {
       const { email } = req.body; // Extract the email from the request body
-      console.log(email);
+      // console.log(email);
       const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '1h',
       });
-      console.log(token);
+      // console.log(token);
       res.send(token);
     });
     
@@ -70,7 +70,7 @@ async function run() {
     app.post('/users', async (req, res) => {
       const user = req.body;
       const result = await UserCollection.insertOne(user);
-      console.log(result);
+      // console.log(result);
       res.send(result);
     })
 
@@ -90,7 +90,7 @@ async function run() {
     app.post('/classes', async (req, res) => {
       const user = req.body;
       const result = await ClassesCollection.insertOne(user);
-      console.log(result);
+      // console.log(result);
       res.send(result);
     })
 
@@ -121,7 +121,7 @@ app.post('/select', async (req, res) => {
     }
 
     const result = await SelectCollection.insertOne(selectData);
-    console.log(result);
+    // console.log(result);
     res.send(result);
   } catch (error) {
     console.error(error);
@@ -145,6 +145,18 @@ app.delete('/select/:classId', async (req, res) => {
 });
 
 
+//enroll apis
+app.get('/enrolled-classes', verifyJWT, async (req, res) => {
+  try {
+    const userEmail = req.decoded.email;
+    console.log(userEmail)
+    const enrolledClasses = await EnrollCollection.find({ userEmail }).toArray();
+    res.status(200).json(enrolledClasses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: true, message: 'Failed to fetch enrolled classes' });
+  }
+});
 
 
 
@@ -167,7 +179,7 @@ app.delete('/select/:classId', async (req, res) => {
 app.post('/payments', verifyJWT, async (req, res) => {
   const payment = req.body;
   const insertResult = await PaymentCollection.insertOne(payment);
-  console.log(payment.classItem);
+  // console.log(payment.classItem);
 
   // Increase the enroll value of ClassesCollection
   const enrollFilter = { _id: new ObjectId(payment.classItem.classId) };
