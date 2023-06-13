@@ -67,12 +67,40 @@ async function run() {
 
 
     // user api 
+    app.get('/users', async (req, res) => {
+      const result = await UserCollection.find().toArray();
+      // console.log(result);
+      res.send(result);
+    })
+
     app.post('/users', async (req, res) => {
       const user = req.body;
       const result = await UserCollection.insertOne(user);
       // console.log(result);
       res.send(result);
     })
+
+    app.put('/users/:id/role', async (req, res) => {
+      try {
+        const userId = req.params.id;
+        const { role } = req.body;
+    
+        // Update the user role in the database
+        const result = await UserCollection.updateOne(
+          { _id: new ObjectId(userId) },
+          { $set: { role } }
+        );
+    
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+    
+        res.json({ message: 'User role updated successfully' });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    });
 
     // classes apis 
 
