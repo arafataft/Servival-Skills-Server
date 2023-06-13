@@ -102,6 +102,47 @@ async function run() {
       }
     });
 
+
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false })
+      }
+
+      const query = { email: email }
+      const user = await UserCollection.findOne(query);
+      const result = { admin: user?.role === 'admin' }
+      res.send(result);
+    })
+    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false })
+      }
+
+      const query = { email: email }
+      const user = await UserCollection.findOne(query);
+      const result = { admin: user?.role === 'instructor' }
+      res.send(result);
+    })
+    app.get('/users/student/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false })
+      }
+
+      const query = { email: email }
+      const user = await UserCollection.findOne(query);
+      const result = { admin: user?.role === 'student' }
+      res.send(result);
+    })
+
+
+
+
     // classes apis 
 
     app.get('/classes', async (req, res) => {
