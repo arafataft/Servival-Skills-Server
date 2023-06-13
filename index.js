@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken')
 require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -43,11 +44,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server (optional starting in v4.7)
-    await client.connect();
+    // await 
+    client.connect();
 
     const ClassesCollection = client.db('survivalDB').collection('Classes')
     const UserCollection = client.db('survivalDB').collection('users')
     const SelectCollection = client.db('survivalDB').collection('select')
+    const PaymentCollection = client.db("survivalDB").collection("payments");
+    const EnrollCollection = client.db("survivalDB").collection("enroll");
 
     //jwt token
     app.post('/jwt', (req, res) => {
@@ -139,6 +143,50 @@ app.delete('/select/:classId', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete the class' });
   }
 });
+
+
+
+
+
+ // create payment intent
+ app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+  const { price } = req.body;
+  const amount = parseInt(price * 100);
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount,
+    currency: 'usd',
+    payment_method_types: ['card']
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret
+  })
+})
+
+
+app.post('/payments', verifyJWT, async (req, res) => {
+  const payment = req.body;
+  const insertResult = await PaymentCollection.insertOne(payment);
+  console.log(payment.classItem);
+
+  // Increase the enroll value of ClassesCollection
+  const enrollFilter = { _id: new ObjectId(payment.classItem.classId) };
+  const enrollUpdate = { $inc: { enroll: 1 } };
+  await ClassesCollection.updateOne(enrollFilter, enrollUpdate);
+
+  const insertEnroll = await EnrollCollection.insertOne(payment.classItem);
+
+  const filter = { _id: new ObjectId(payment.classItem.classId) };
+  const update = { $inc: { availableSeats: -1 } };
+  ClassesCollection.updateOne(filter, update, function(err, result) {
+    console.log(`${result.modifiedCount} document(s) updated`);
+  });
+
+  const query = { _id: new ObjectId(payment.classItem._id) };
+  const deleteResult = await SelectCollection.deleteOne(query);
+
+  res.send({ insertResult, deleteResult, insertEnroll });
+})
 
 
 
