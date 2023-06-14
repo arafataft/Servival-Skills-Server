@@ -153,6 +153,19 @@ async function run() {
 
 
     // classes apis 
+    app.get('/instructor-classes', verifyJWT, async (req, res) => {
+      try {
+        const userEmail = req.decoded.email; // Extract the user email from the decoded token
+    
+        // Fetch classes where the instructor email matches the user email
+        const classes = await ClassesCollection.find({ instructorEmail: userEmail }).toArray();
+    
+        res.status(200).json(classes);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to fetch instructor classes' });
+      }
+    });
 
     app.get('/classes', async (req, res) => {
       try {
@@ -248,21 +261,6 @@ app.put('/classes/:classId/feedback', async (req, res) => {
   }
 });
 
-
-
-    app.get('/instructor-classes', verifyJWT, async (req, res) => {
-      try {
-        const userEmail = req.decoded.email; // Extract the user email from the decoded token
-    
-        // Fetch classes where the instructor email matches the user email
-        const classes = await ClassesCollection.find({ instructorEmail: userEmail }).toArray();
-    
-        res.status(200).json(classes);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: true, message: 'Failed to fetch instructor classes' });
-      }
-    });
     
 
 
